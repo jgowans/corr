@@ -67,8 +67,8 @@ def analogue_gain_adj(fpga,zdok_n,gain_I=0,gain_Q=0):
     #bits_I= int(((gain_I+1.5)*256)/3.0)
     #bits_Q= int(((gain_Q+1.5)*256)/3.0)
     #spi_write_register(fpga,zdok_n,0x1,(bits_Q<<8) + (bits_I<<0))
-    bits_I= abs(int(((gain_I)*127)/1.5))
-    bits_Q= abs(int(((gain_Q)*127)/1.5))
+    bits_I= abs(round(((gain_I)*127)/1.5))
+    bits_Q= abs(round(((gain_Q)*127)/1.5))
     sign_I = 1 if gain_I<0 else 0
     sign_Q = 1 if gain_Q<0 else 0
     val=((sign_Q<<15) + (sign_I<<7) + (bits_Q<<8) + (bits_I<<0))
@@ -80,8 +80,8 @@ def analogue_gain_adj(fpga,zdok_n,gain_I=0,gain_Q=0):
 def offset_adj(fpga,zdok_n,offset_I=0,offset_Q=0):
     """Adjusts the on-chip DC offset. Offset is in range [-31.75LSb:+31.75LSb:0.25LSb]. NOT TESTED. YMMV!"""
     if offset_I>31.75 or offset_I<-31.75 or offset_Q<-31.75 or offset_Q>31.75: raise RuntimeError("Invalid offset setting. Valid range is -31.75 to +31.75LSb")
-    bits_I= abs(int(((offset_I)*127)/31.75))
-    bits_Q= abs(int(((offset_Q)*127)/31.75))
+    bits_I= abs(round(((offset_I)*127)/31.75))
+    bits_Q= abs(round(((offset_Q)*127)/31.75))
     sign_I = 1 if offset_I>0 else 0
     sign_Q = 1 if offset_Q>0 else 0
     val=((sign_Q<<15) + (sign_I<<7) + (bits_Q<<8) + (bits_I<<0))
@@ -91,7 +91,7 @@ def offset_adj(fpga,zdok_n,offset_I=0,offset_Q=0):
 def gain_adj(fpga,zdok_n,gain):
     """Adjusts the on-chip gain for the two ADCs in dB. Valid range is -0.315 to +0.315dB in steps of 0.011dB. NOT TESTED. YMMV!"""
     if gain<-0.315 or gain>0.315: raise RuntimeError("Invalid gain setting. Valid range is -1.5 to +1.5dB")
-    bits= abs(int(((gain)*63)/0.315))
+    bits= abs(round(((gain)*63)/0.315))
     sign = 1 if gain<0 else 0
     print 'Writing %4x'%((sign<<6) + (bits<<0))
     spi_write_register(fpga,zdok_n,0x3,(sign<<6) + (bits<<0))
@@ -99,7 +99,7 @@ def gain_adj(fpga,zdok_n,gain):
 def fisda_Q_adj(fpga,zdock_n,delay=0):
     """Adjusts the Fine Sampling Delay Adjustment (FiSDA) on channel Q. delay is in ps and has a valid range of -60 to +60ps in 4ps steps. NOT TESTED! YMMV!"""
     if delay<-60 or delay>60: raise RuntimeError("Invalid delay setting. Valid range is -60ps to +60ps.")
-    bits= abs(int(((delay)*15)/60))
+    bits= abs(round(((delay)*15)/60))
     sign = 1 if delay<0 else 0
     print 'Writing %4x'%((sign<<10) + (bits<<6))
     spi_write_register(fpga,zdok_n,0x7,(sign<<10) + (bits<<6))
