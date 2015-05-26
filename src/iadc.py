@@ -96,11 +96,16 @@ def gain_adj(fpga,zdok_n,gain):
     print 'Writing %4x'%((sign<<6) + (bits<<0))
     spi_write_register(fpga,zdok_n,0x3,(sign<<6) + (bits<<0))
 
-def fisda_Q_adj(fpga,zdock_n,delay=0):
+def fisda_Q_adj(fpga,zdock_n,delay=0, drda_i=0, drda_q=0):
     """Adjusts the Fine Sampling Delay Adjustment (FiSDA) on channel Q. delay is in ps and has a valid range of -60 to +60ps in 4ps steps. NOT TESTED! YMMV!"""
     if delay<-60 or delay>60: raise RuntimeError("Invalid delay setting. Valid range is -60ps to +60ps.")
-    bits= abs(round(((delay)*15)/60))
-    sign = 1 if delay<0 else 0
-    print 'Writing %4x'%((sign<<10) + (bits<<6))
-    spi_write_register(fpga,zdok_n,0x7,(sign<<10) + (bits<<6))
+    fisda_bits= abs(round(((delay)*15)/60))
+    fisda_sign = 1 if delay<0 else 0
+    if ( (drda_i < -560) or (drda_i > 420) ): raise RuntimeError("Invalid DRDA_I. Valid range is [-560; +420] ps")
+    if ( (drda_q < -560) or (drda_q > 420) ): raise RuntimeError("Invalid DRDA_Q. Valid range is [-560; +420] ps")
+    drda_i_bits = round(((drda_i + 560) / 140))
+    drda_q_bits = round(((drda_q + 560) / 140))
+    full_pattern = (fisda_sign<<10) + (fisda_bits<<6) + (drda_q_bits << 3) + (drda_i_bits << 0)
+    print 'Writing %4x'%(full_pattern)
+    spi_write_register(fpga,zdok_n,0x7,full_pattern)
     
