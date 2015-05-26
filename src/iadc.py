@@ -109,3 +109,15 @@ def fisda_Q_adj(fpga,zdock_n,delay=0, drda_i=0, drda_q=0):
     print 'Writing %4x'%(full_pattern)
     spi_write_register(fpga,zdok_n,0x7,full_pattern)
     
+def isa_adj(fpga, zdok_n, isa_i, isa_q):
+    """
+    Sets Internal Settling Adjustment.
+    Range is -200 ps to 150 ps in steps of 50 ps
+    """
+    if( (isa_i < -200) or (isa_i > 150) ): raise RuntimeError("Invalid ISA_I. Valid range is [-200; +150] ps")
+    if( (isa_q < -200) or (isa_q > 150) ): raise RuntimeError("Invalid ISA_Q. Valid range is [-200; +150] ps")
+    isa_i_bits = round((isa_i + 200) / 50)
+    isa_q_bits = round((isa_q + 200) / 50)
+    value = (isa_q << 3) + (isa_i << 0) + (0b1000010000 << 6)  # some pattern which the datasheet says should be there
+    print("Writing %4x"%value)
+    spi_write_register(fpga, zdok_n, 0b100, value)
