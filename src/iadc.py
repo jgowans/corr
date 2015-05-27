@@ -64,14 +64,9 @@ def configure(fpga,zdok_n,mode='indep',cal='new',clk_speed=800):
 def analogue_gain_adj(fpga,zdok_n,gain_I=0,gain_Q=0):
     """Adjusts the on-chip analogue gain for the two ADCs in dB. Valid range is -1.5 to +1.5 in steps of 0.011dB."""
     if gain_I>1.5 or gain_I<-1.5 or gain_Q<-1.5 or gain_Q>1.5: raise RuntimeError("Invalid gain setting. Valid range is -1.5 to +1.5dB")
-    #bits_I= int(((gain_I+1.5)*256)/3.0)
-    #bits_Q= int(((gain_Q+1.5)*256)/3.0)
-    #spi_write_register(fpga,zdok_n,0x1,(bits_Q<<8) + (bits_I<<0))
-    bits_I= abs(int(round(((gain_I)*127)/1.5)))
-    bits_Q= abs(int(round(((gain_Q)*127)/1.5)))
-    sign_I = 1 if gain_I<0 else 0
-    sign_Q = 1 if gain_Q<0 else 0
-    val=((sign_Q<<15) + (sign_I<<7) + (bits_Q<<8) + (bits_I<<0))
+    bits_I= int(round(((gain_I+1.5)*255)/3.0))
+    bits_Q= int(round(((gain_Q+1.5)*255)/3.0))
+    val=( (bits_Q<<8) + (bits_I<<0) )
     print 'Writing %4x'%(val)
     spi_write_register(fpga,zdok_n,0x1,val)
 
@@ -99,7 +94,7 @@ def gain_adj(fpga,zdok_n,gain):
 def fisda_Q_adj(fpga,zdok_n,delay=0, drda_i=0, drda_q=0):
     """Adjusts the Fine Sampling Delay Adjustment (FiSDA) on channel Q. delay is in ps and has a valid range of -60 to +60ps in 4ps steps. NOT TESTED! YMMV!"""
     if delay<-64 or delay>120: raise RuntimeError("Invalid delay setting. Valid range is -64ps to +120ps.")
-    fisda_bits= abs(int(round(((delay)*15)/120)))
+    fisda_bits= abs(int(round(((delay)*15)/120.0)))
     fisda_sign = 1 if delay<0 else 0
     if ( (drda_i < -560) or (drda_i > 420) ): raise RuntimeError("Invalid DRDA_I. Valid range is [-560; +420] ps")
     if ( (drda_q < -560) or (drda_q > 420) ): raise RuntimeError("Invalid DRDA_Q. Valid range is [-560; +420] ps")
@@ -116,8 +111,8 @@ def isa_adj(fpga, zdok_n, isa_i, isa_q):
     """
     if( (isa_i < -200) or (isa_i > 150) ): raise RuntimeError("Invalid ISA_I. Valid range is [-200; +150] ps")
     if( (isa_q < -200) or (isa_q > 150) ): raise RuntimeError("Invalid ISA_Q. Valid range is [-200; +150] ps")
-    isa_i_bits = int(round((isa_i + 200) / 50))
-    isa_q_bits = int(round((isa_q + 200) / 50))
+    isa_i_bits = int(round((isa_i + 200) / 50.0))
+    isa_q_bits = int(round((isa_q + 200) / 50.0))
     value = (isa_q << 3) + (isa_i << 0) + (0b1000010000 << 6)  # some pattern which the datasheet says should be there
     print("Writing %4x"%value)
     spi_write_register(fpga, zdok_n, 0b100, value)
