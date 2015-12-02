@@ -1,4 +1,4 @@
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 import os, sys, glob
 
 __version__ = '0.7.3'
